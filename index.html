@@ -12,36 +12,9 @@
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/username/repo/main/logo.png" onerror="this.href='https://placehold.co/192x192/000000/ffffff?text=AL'">
 
     <!-- Dynamic Web App Manifest generated for standalone installation -->
-    <script>
-        const manifestData = {
-            "name": "A/L Study Timer",
-            "short_name": "A/L Tracker",
-            "start_url": "./index.html",
-            "display": "standalone",
-            "background_color": "#000000",
-            "theme_color": "#000000",
-            "icons": [
-                {
-                    "src": "https://raw.githubusercontent.com/Janindu52/A-L-Study-Tracker/main/logo.png",
-                    "sizes": "192x192",
-                    "type": "image/png"
-                },
-                {
-                    "src": "https://raw.githubusercontent.com/Janindu52/A-L-Study-Tracker/main/logo.png",
-                    "sizes": "512x512",
-                    "type": "image/png"
-                }
-            ]
-        };
-        const stringManifest = JSON.stringify(manifestData);
-        const blob = new Blob([stringManifest], {type: 'application/json'});
-        const manifestURL = URL.createObjectURL(blob);
-        const manifestTag = document.createElement('link');
-        manifestTag.rel = 'manifest';
-        manifestTag.href = manifestURL;
-        document.head.appendChild(manifestTag);
-    </script>
-    
+
+<link rel="manifest" href="manifest.json">
+
     <title>A/L Study Time Tracker</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
