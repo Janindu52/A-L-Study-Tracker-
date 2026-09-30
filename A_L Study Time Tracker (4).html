@@ -1,0 +1,1543 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000000">
+    
+    <!-- PWA Web App Manifest & Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/username/repo/main/logo.png" onerror="this.href='https://placehold.co/192x192/000000/ffffff?text=AL'">
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/username/repo/main/logo.png" onerror="this.href='https://placehold.co/192x192/000000/ffffff?text=AL'">
+
+    <!-- Dynamic Web App Manifest generated for standalone installation -->
+    <script>
+        const manifestData = {
+            "name": "A/L Study Timer",
+            "short_name": "A/L Tracker",
+            "start_url": "./index.html",
+            "display": "standalone",
+            "background_color": "#000000",
+            "theme_color": "#000000",
+            "icons": [
+                {
+                    "src": "https://raw.githubusercontent.com/username/repo/main/logo.png",
+                    "sizes": "192x192",
+                    "type": "image/png"
+                },
+                {
+                    "src": "https://raw.githubusercontent.com/username/repo/main/logo.png",
+                    "sizes": "512x512",
+                    "type": "image/png"
+                }
+            ]
+        };
+        const stringManifest = JSON.stringify(manifestData);
+        const blob = new Blob([stringManifest], {type: 'application/json'});
+        const manifestURL = URL.createObjectURL(blob);
+        const manifestTag = document.createElement('link');
+        manifestTag.rel = 'manifest';
+        manifestTag.href = manifestURL;
+        document.head.appendChild(manifestTag);
+    </script>
+    
+    <title>A/L Study Time Tracker</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        amoled: {
+                            bg: '#000000',
+                            card: '#09090b',
+                            cardHover: '#121215',
+                            border: '#27272a',
+                            input: '#18181b'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #000000; color: #f4f4f5; }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #000000; }
+        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 9999px; }
+        .tap-highlight-transparent { -webkit-tap-highlight-color: transparent; }
+    </style>
+</head>
+<body class="bg-black text-zinc-100 min-h-screen flex flex-col antialiased selection:bg-zinc-800 selection:text-white pb-36">
+
+    <header class="bg-black/90 backdrop-blur-md border-b border-zinc-800/80 sticky top-0 z-30 shadow-2xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('dashboard')">
+                    <div class="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-700 overflow-hidden flex items-center justify-center text-white shadow-lg">
+                        <img src="https://raw.githubusercontent.com/username/repo/main/logo.png" alt="Logo" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://placehold.co/100x100/09090b/ffffff?text=AL';">
+                    </div>
+                    <div>
+                        <h1 class="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-2">
+                            A/L Study Time Tracker
+                        </h1>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 space-y-4">
+
+        <!-- DASHBOARD TAB -->
+        <section id="tab-dashboard" class="tab-content space-y-4">
+
+            <!-- Today / Week Sub-Tabs Switcher -->
+            <div class="flex items-center justify-center p-1 bg-zinc-900 rounded-2xl border border-zinc-800 max-w-xs mx-auto mb-2">
+                <button onclick="switchDashboardSubTab('today')" id="subtab-today-btn" class="flex-1 py-2 rounded-xl text-xs font-bold transition-all bg-emerald-600 text-white shadow">
+                    Today
+                </button>
+                <button onclick="switchDashboardSubTab('week')" id="subtab-week-btn" class="flex-1 py-2 rounded-xl text-xs font-bold transition-all text-zinc-400 hover:text-white">
+                    Week
+                </button>
+            </div>
+
+            <div id="dashboard-subtab-today" class="space-y-4">
+                
+                <!-- Date Navigator for Today Sub-Tab -->
+                <div class="bg-zinc-900 border border-zinc-800 rounded-2xl py-2.5 px-4 shadow-lg flex items-center justify-between max-w-md mx-auto">
+                    <button onclick="changeTodayDate(-1)" class="w-8 h-8 rounded-xl bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-300 transition text-xs" title="Previous Day">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <div class="text-center flex items-center gap-2">
+                        <span id="today-date-label" class="text-xs sm:text-sm font-extrabold text-white">Today</span>
+                        <button id="today-jump-btn" onclick="jumpToTodayDate()" class="hidden px-2 py-0.5 bg-emerald-600/35 hover:bg-emerald-600/60 text-emerald-300 border border-emerald-500/50 rounded-lg text-[10px] font-bold transition shadow-sm">Today</button>
+                    </div>
+                    <button onclick="changeTodayDate(1)" class="w-8 h-8 rounded-xl bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-300 transition text-xs" title="Next Day">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <!-- Today Summary Cards (Focus Time & Sessions side by side) -->
+                <div class="grid grid-cols-2 gap-3 max-w-md mx-auto">
+                    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-3 shadow-lg flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block mb-0.5">Focus Time</span>
+                            <h3 id="dash-today-time" class="text-base sm:text-lg font-black text-white">0h 00m</h3>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block mb-0.5">Goal</span>
+                            <span class="text-xs font-extrabold text-emerald-400">6h 00m</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-3 shadow-lg flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block mb-0.5">Sessions</span>
+                            <h3 id="dash-today-sessions-count" class="text-base sm:text-lg font-black text-white">0</h3>
+                        </div>
+                        <div class="text-right">
+                            <i class="fa-solid fa-list-check text-emerald-400 text-sm opacity-80"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subject Daily Work Time Boxes (Placed ABOVE the Circular Donut Chart) -->
+                <div class="grid grid-cols-1 gap-2 max-w-md mx-auto">
+                    <!-- Combined Mathematics Box -->
+                    <div class="bg-zinc-900/95 border border-red-500/40 rounded-2xl p-3 shadow-lg space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+                                <span class="text-[11px] font-black text-red-400 uppercase tracking-wide">Combined Mathematics</span>
+                            </div>
+                            <span class="text-[11px] font-extrabold text-zinc-300" id="today-maths-percent">0%</span>
+                        </div>
+                        <div class="flex items-end justify-between">
+                            <div class="text-xl font-black text-white" id="today-maths-time">0h 00m</div>
+                            <div class="text-[11px] font-bold text-zinc-400" id="today-maths-sessions">0 sessions</div>
+                        </div>
+                        <div class="w-full bg-zinc-800 rounded-full h-2.5 overflow-hidden p-0.5">
+                            <div id="today-maths-bar" class="bg-red-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Physics Box -->
+                    <div class="bg-zinc-900/95 border border-blue-500/40 rounded-2xl p-3 shadow-lg space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                                <span class="text-[11px] font-black text-blue-400 uppercase tracking-wide">Physics</span>
+                            </div>
+                            <span class="text-[11px] font-extrabold text-zinc-300" id="today-physics-percent">0%</span>
+                        </div>
+                        <div class="flex items-end justify-between">
+                            <div class="text-xl font-black text-white" id="today-physics-time">0h 00m</div>
+                            <div class="text-[11px] font-bold text-zinc-400" id="today-physics-sessions">0 sessions</div>
+                        </div>
+                        <div class="w-full bg-zinc-800 rounded-full h-2.5 overflow-hidden p-0.5">
+                            <div id="today-physics-bar" class="bg-blue-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Chemistry Box -->
+                    <div class="bg-zinc-900/95 border border-emerald-500/40 rounded-2xl p-3 shadow-lg space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                                <span class="text-[11px] font-black text-emerald-400 uppercase tracking-wide">Chemistry</span>
+                            </div>
+                            <span class="text-[11px] font-extrabold text-zinc-300" id="today-chem-percent">0%</span>
+                        </div>
+                        <div class="flex items-end justify-between">
+                            <div class="text-xl font-black text-white" id="today-chem-time">0h 00m</div>
+                            <div class="text-[11px] font-bold text-zinc-400" id="today-chem-sessions">0 sessions</div>
+                        </div>
+                        <div class="w-full bg-zinc-800 rounded-full h-2.5 overflow-hidden p-0.5">
+                            <div id="today-chem-bar" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Circular Donut Chart Card (Wider Canvas) -->
+                <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-5 shadow-2xl space-y-4 max-w-md mx-auto">
+                    <div>
+                        <h3 class="font-extrabold text-base text-white flex items-center gap-2">
+                            <i class="fa-solid fa-chart-pie text-emerald-400"></i> Subject Breakdown Distribution
+                        </h3>
+                        <p class="text-xs text-zinc-400 mt-0.5">Proportion distribution across studied subjects</p>
+                    </div>
+
+                    <div class="relative w-full h-[320px] flex items-center justify-center">
+                        <canvas id="todayDonutChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+            <div id="dashboard-subtab-week" class="space-y-4 hidden">
+                
+                <!-- Week Navigator Bar -->
+                <div class="bg-zinc-900 border border-zinc-800 rounded-2xl py-2.5 px-4 shadow-lg flex items-center justify-between w-full">
+                    <button onclick="changeWeekOffset(1)" class="w-8 h-8 rounded-xl bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-300 transition text-xs" title="Previous Week">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <div class="text-center flex items-center gap-2">
+                        <span id="week-range-label" class="text-xs sm:text-sm font-extrabold text-white">This Week</span>
+                        <button id="week-jump-btn" onclick="jumpToCurrentWeek()" class="hidden px-2 py-0.5 bg-emerald-600/35 hover:bg-emerald-600/60 text-emerald-300 border border-emerald-500/50 rounded-lg text-[10px] font-bold transition shadow-sm">Current</button>
+                    </div>
+                    <button onclick="changeWeekOffset(-1)" class="w-8 h-8 rounded-xl bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-300 transition text-xs" title="Next Week">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <!-- Streaks Weekly Grid (Full width spread, check/cross indicators with green/red states) -->
+                <div class="w-full bg-zinc-900/60 border border-zinc-800/80 rounded-3xl p-4 shadow-lg">
+                    <div class="grid grid-cols-7 gap-1 sm:gap-2 text-center w-full" id="streaks-week-grid">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Top Stats Cards -->
+                <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 max-w-md mx-auto">
+                    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-3.5 shadow-lg flex flex-col justify-between">
+                        <div class="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-1">
+                            <span>Weekly Focus</span>
+                            <i class="fa-solid fa-clock text-emerald-400"></i>
+                        </div>
+                        <div>
+                            <h3 id="dash-weekly-time" class="text-xl font-black text-emerald-400">0.0 hrs</h3>
+                            <p class="text-[10px] text-zinc-500 mt-0.5">Last 7 days total</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-3.5 shadow-lg flex flex-col justify-between">
+                        <div class="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-1">
+                            <span>Top Subject</span>
+                            <i class="fa-solid fa-trophy text-purple-400"></i>
+                        </div>
+                        <div>
+                            <div id="dash-top-subject" class="text-xs sm:text-sm font-extrabold text-white leading-tight">
+                                <span class="block">Combined</span>
+                                <span class="block">Maths</span>
+                            </div>
+                            <p id="dash-top-subject-time" class="text-[10px] text-zinc-400 mt-0.5">0 hrs total</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-3.5 shadow-lg flex flex-col justify-between col-span-2 lg:col-span-1">
+                        <div class="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-1">
+                            <span>Sessions</span>
+                            <i class="fa-solid fa-check-double text-blue-400"></i>
+                        </div>
+                        <div>
+                            <h3 id="dash-total-sessions" class="text-xl font-black text-white">0</h3>
+                            <p class="text-[10px] text-zinc-500 mt-0.5">Completed runs</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stacked Weekly Study Time Bar Chart -->
+                <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-5 shadow-2xl space-y-3 max-w-md mx-auto">
+                    <div class="flex items-center justify-between">
+                        <div class="space-y-0.5">
+                            <h3 class="font-extrabold text-base text-white flex items-center gap-2">
+                                <i class="fa-solid fa-chart-column text-emerald-400"></i> Study Time
+                            </h3>
+                            <p class="text-xs text-zinc-400">Daily breakdown for the last 7 days</p>
+                        </div>
+                        <div class="flex items-center">
+                            <button onclick="toggleShowCourses()" id="show-courses-toggle" class="w-7 h-4 bg-emerald-600 rounded-full transition relative p-0.5 shadow-inner" title="Toggle Subject Breakdown">
+                                <div id="show-courses-knob" class="w-3 h-3 bg-white rounded-full transition-transform translate-x-3 shadow"></div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="relative w-full h-[280px] flex items-center justify-center pt-2">
+                        <canvas id="weeklyStackedBarChart"></canvas>
+                    </div>
+
+                    <!-- Small single row clickable subject legend filters -->
+                    <div class="flex items-center justify-center gap-1 pt-1 text-[9px] font-bold flex-wrap">
+                        <button onclick="toggleSubjectFilter('Chemistry')" id="legend-btn-Chemistry" class="flex items-center gap-1 transition opacity-100 cursor-pointer bg-zinc-800/80 hover:bg-zinc-800 px-2 py-0.5 rounded border border-zinc-700/50">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> <span class="text-zinc-200">Chemistry</span>
+                        </button>
+                        <button onclick="toggleSubjectFilter('Combined Mathematics')" id="legend-btn-Combined Mathematics" class="flex items-center gap-1 transition opacity-100 cursor-pointer bg-zinc-800/80 hover:bg-zinc-800 px-2 py-0.5 rounded border border-zinc-700/50">
+                            <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> <span class="text-zinc-200">Combined Maths</span>
+                        </button>
+                        <button onclick="toggleSubjectFilter('Physics')" id="legend-btn-Physics" class="flex items-center gap-1 transition opacity-100 cursor-pointer bg-zinc-800/80 hover:bg-zinc-800 px-2 py-0.5 rounded border border-zinc-700/50">
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> <span class="text-zinc-200">Physics</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Radar Chart Card matching reference layout -->
+                <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-5 shadow-2xl space-y-3 max-w-md mx-auto">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-extrabold text-base text-white flex items-center gap-2">
+                                <i class="fa-solid fa-radar text-blue-400"></i> Time analysis
+                            </h3>
+                        </div>
+                        <div class="flex items-center bg-black px-3 py-1.5 rounded-xl border border-zinc-800 text-xs font-bold text-zinc-300">
+                            Weekdays
+                        </div>
+                    </div>
+                    <div class="relative w-full h-[350px] flex items-center justify-center pt-2">
+                        <canvas id="weeklyRadarChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+        <section id="tab-timer" class="tab-content hidden space-y-6">
+            <div class="max-w-xl mx-auto bg-zinc-900 border border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 text-center">
+                
+                <div class="flex items-center justify-center p-1 bg-black rounded-2xl border border-zinc-800 max-w-xs mx-auto">
+                    <button onclick="setTimerMode('pomodoro')" id="mode-pomodoro-btn" class="flex-1 py-2 rounded-xl text-xs font-bold transition-all bg-zinc-800 text-white shadow">
+                        Pomodoro (25m)
+                    </button>
+                    <button onclick="setTimerMode('stopwatch')" id="mode-stopwatch-btn" class="flex-1 py-2 rounded-xl text-xs font-bold transition-all text-zinc-400 hover:text-white">
+                        Stopwatch
+                    </button>
+                </div>
+
+                <div class="space-y-2 text-left">
+                    <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wide">Select Focus Subject</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="selectTimerSubject('Combined Mathematics')" id="subj-btn-maths" class="timer-subj-btn py-2.5 px-3 rounded-xl border border-red-500/50 bg-red-500/20 text-red-300 font-extrabold text-xs transition flex items-center justify-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-red-500"></span> Maths
+                        </button>
+                        <button onclick="selectTimerSubject('Physics')" id="subj-btn-physics" class="timer-subj-btn py-2.5 px-3 rounded-xl border border-zinc-800 bg-black text-zinc-400 font-bold text-xs transition flex items-center justify-center gap-2 hover:border-blue-500">
+                            <span class="w-2 h-2 rounded-full bg-blue-500"></span> Physics
+                        </button>
+                        <button onclick="selectTimerSubject('Chemistry')" id="subj-btn-chemistry" class="timer-subj-btn py-2.5 px-3 rounded-xl border border-zinc-800 bg-black text-zinc-400 font-bold text-xs transition flex items-center justify-center gap-2 hover:border-emerald-500">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Chem
+                        </button>
+                    </div>
+                </div>
+
+                <div class="text-left space-y-1">
+                    <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wide">What are you studying?</label>
+                    <input type="text" id="timer-topic-input" placeholder="e.g. Mechanics Past Paper / Organic Name Reactions" class="w-full px-4 py-2.5 bg-black border border-zinc-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
+                </div>
+
+                <div class="py-6 bg-black/60 rounded-3xl border border-zinc-800/80 shadow-inner relative overflow-hidden">
+                    <div id="timer-display" class="text-6xl sm:text-7xl font-black tracking-wider text-white font-mono">
+                        25:00
+                    </div>
+                    <p id="timer-status-label" class="text-xs text-zinc-400 font-bold mt-2 uppercase tracking-widest">Ready to Focus</p>
+                </div>
+
+                <!-- Timer Controls: When running/paused, shows Resume & Stop (Finish) -->
+                <div id="timer-controls-area" class="flex items-center justify-center gap-3">
+                    <button id="timer-main-btn" onclick="toggleTimer()" class="py-3 px-8 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm rounded-2xl shadow-xl shadow-emerald-500/20 transition flex items-center gap-2">
+                        <i class="fa-solid fa-play" id="timer-main-icon"></i> <span id="timer-main-text">Start Focus</span>
+                    </button>
+                    <button onclick="resetTimer()" class="py-3 px-5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-sm rounded-2xl transition" title="Reset Timer">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- CLEAN & CLEAR HISTORY TAB -->
+        <section id="tab-logs" class="tab-content hidden space-y-5 max-w-xl mx-auto">
+            <!-- Header with Title & Add Button -->
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2.5">
+                        <i class="fa-solid fa-clock-rotate-left text-emerald-400"></i> Study History
+                    </h2>
+                    <p class="text-xs text-zinc-400 mt-0.5">Review, filter, and manage past study sessions</p>
+                </div>
+                <button onclick="openManualLogModal()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition flex items-center gap-1.5 flex-shrink-0">
+                    <i class="fa-solid fa-plus text-[10px]"></i> Add
+                </button>
+            </div>
+
+            <!-- Clean Summary KPI Bar -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-3.5 shadow-lg flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block mb-0.5">Total Tracked</span>
+                        <h3 id="history-total-time" class="text-base sm:text-lg font-black text-white">0h 00m</h3>
+                    </div>
+                    <div class="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-xs">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+                </div>
+                <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-3.5 shadow-lg flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block mb-0.5">Total Sessions</span>
+                        <h3 id="history-total-count" class="text-base sm:text-lg font-black text-white">0</h3>
+                    </div>
+                    <div class="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 text-xs">
+                        <i class="fa-solid fa-list-check"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clean Search & Filter Controls -->
+            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-3 shadow-lg space-y-2.5">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs"></i>
+                    <input type="text" id="history-search-input" oninput="renderSessionsLogs()" placeholder="Search topics or subjects..." class="w-full pl-9 pr-4 py-2 bg-black border border-zinc-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 transition">
+                </div>
+
+                <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-bold scrollbar-none">
+                    <button onclick="setHistoryFilter('all')" id="filter-btn-all" class="px-3 py-1.5 rounded-xl bg-emerald-600 text-white transition flex-shrink-0 shadow-sm">
+                        All Subjects
+                    </button>
+                    <button onclick="setHistoryFilter('Combined Mathematics')" id="filter-btn-maths" class="px-3 py-1.5 rounded-xl bg-black border border-zinc-800 text-zinc-400 hover:text-white transition flex-shrink-0">
+                        Maths
+                    </button>
+                    <button onclick="setHistoryFilter('Physics')" id="filter-btn-physics" class="px-3 py-1.5 rounded-xl bg-black border border-zinc-800 text-zinc-400 hover:text-white transition flex-shrink-0">
+                        Physics
+                    </button>
+                    <button onclick="setHistoryFilter('Chemistry')" id="filter-btn-chem" class="px-3 py-1.5 rounded-xl bg-black border border-zinc-800 text-zinc-400 hover:text-white transition flex-shrink-0">
+                        Chemistry
+                    </button>
+                </div>
+            </div>
+
+            <!-- Grouped Sessions Container -->
+            <div id="sessions-groups-container" class="space-y-5">
+                <!-- Dynamically populated grouped by date -->
+            </div>
+        </section>
+
+    </main>
+
+    <div id="manual-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative space-y-4">
+            <button onclick="closeManualLogModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 text-xl">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-white">Add Study Session</h3>
+                    <p class="text-xs text-zinc-400">Log past study hours manually</p>
+                </div>
+            </div>
+
+            <form onsubmit="handleManualAdd(event)" class="space-y-3">
+                <div>
+                    <label class="block text-[11px] font-bold text-zinc-400 mb-1">Subject</label>
+                    <select id="manual-subject" class="w-full px-3 py-2.5 bg-black border border-zinc-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
+                        <option value="Combined Mathematics">Combined Mathematics</option>
+                        <option value="Physics">Physics</option>
+                        <option value="Chemistry">Chemistry</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-zinc-400 mb-1">Topic / Notes</label>
+                    <input type="text" id="manual-topic" required placeholder="e.g. Integration Past Paper Practice" class="w-full px-3 py-2.5 bg-black border border-zinc-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-zinc-400 mb-1">Duration (Minutes)</label>
+                        <input type="number" id="manual-minutes" min="5" max="600" required value="45" class="w-full px-3 py-2.5 bg-black border border-zinc-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-zinc-400 mb-1">Date</label>
+                        <input type="date" id="manual-date" required class="w-full px-3 py-2.5 bg-black border border-zinc-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+                <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition">
+                    Save Session Log
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-auto max-w-[92vw]">
+        <div class="bg-zinc-950/95 backdrop-blur-2xl border border-zinc-800/90 rounded-3xl p-2.5 shadow-[0_12px_40px_rgba(0,0,0,0.85)] flex items-center justify-center gap-6 ring-1 ring-white/10">
+            
+            <button onclick="switchTab('dashboard')" id="float-nav-dashboard" class="float-tab group relative flex flex-col items-center justify-center gap-0.5 px-4 py-1.5 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-lg shadow-emerald-500/30 transition-all duration-300 active:scale-95 opacity-100 scale-105 -translate-y-1 ring-2 ring-white/50">
+                <i class="fa-solid fa-chart-pie text-lg"></i>
+                <span class="text-[10px] font-bold tracking-tight">Dashboard</span>
+            </button>
+
+            <button onclick="switchTab('timer')" id="float-nav-timer" class="float-tab group relative flex flex-col items-center justify-center gap-0.5 px-4 py-1.5 rounded-2xl bg-gradient-to-br from-zinc-800 to-zinc-900 text-zinc-400 shadow-lg transition-all duration-300 active:scale-95 opacity-50 grayscale scale-100">
+                <i class="fa-solid fa-stopwatch text-lg"></i>
+                <span class="text-[10px] font-bold tracking-tight">Sessions</span>
+            </button>
+
+            <button onclick="switchTab('logs')" id="float-nav-logs" class="float-tab group relative flex flex-col items-center justify-center gap-0.5 px-4 py-1.5 rounded-2xl bg-gradient-to-br from-zinc-800 to-zinc-900 text-zinc-400 shadow-lg transition-all duration-300 active:scale-95 opacity-50 grayscale scale-100">
+                <i class="fa-solid fa-list-check text-lg"></i>
+                <span class="text-[10px] font-bold tracking-tight">History</span>
+            </button>
+
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'al_study_tracker_sessions_v1';
+
+        function getOffsetDateString(daysAgo) {
+            const d = new Date();
+            d.setDate(d.getDate() - daysAgo);
+            return d.toISOString().split('T')[0];
+        }
+
+        const DEFAULT_SESSIONS = [
+            { id: '1', subject: 'Combined Mathematics', topic: 'Pure Math - Calculus Past Paper', minutes: 180, timeRange: '18:30 – 21:30', date: getOffsetDateString(0) },
+            { id: '2', subject: 'Chemistry', topic: 'Organic Name Reactions', minutes: 180, timeRange: '13:30 – 16:30', date: getOffsetDateString(0) },
+            { id: '3', subject: 'Chemistry', topic: 'Inorganic Qualitative Analysis', minutes: 57, timeRange: '08:24 – 09:52', date: getOffsetDateString(0) },
+            { id: '4', subject: 'Physics', topic: 'Wave Optics & Interference', minutes: 90, timeRange: '10:00 – 11:30', date: getOffsetDateString(1) },
+            { id: '5', subject: 'Combined Mathematics', topic: 'Applied Math - Statics', minutes: 120, timeRange: '14:00 – 16:00', date: getOffsetDateString(2) }
+        ];
+
+        let state = {
+            sessions: [],
+            activeTab: 'dashboard',
+            dashboardSubTab: 'today',
+            selectedTodayDate: new Date().toISOString().split('T')[0],
+            weekOffset: 0,
+            historySubjectFilter: 'all'
+        };
+
+        function loadSessions() {
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    state.sessions = JSON.parse(stored);
+                } else {
+                    state.sessions = DEFAULT_SESSIONS;
+                    saveSessions();
+                }
+            } catch(e) {
+                state.sessions = DEFAULT_SESSIONS;
+            }
+        }
+
+        function saveSessions() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state.sessions));
+            } catch(e) {}
+        }
+
+        let timerInterval = null;
+        let timerMode = 'pomodoro';
+        let timerSecondsLeft = 25 * 60;
+        let timerTotalElapsed = 0;
+        let isTimerRunning = false;
+        let isTimerPaused = false;
+        let selectedTimerSubject = 'Combined Mathematics';
+
+        const SUBJECT_COLORS = {
+            'Combined Mathematics': '#ef4444',
+            'Physics': '#3b82f6',
+            'Chemistry': '#10b981'
+        };
+
+        let todayDonutInstance = null;
+        let weeklyChartInstance = null;
+        let radarChartInstance = null;
+        let showCoursesEnabled = true;
+        let activeSubjectFilters = {
+            'Chemistry': true,
+            'Combined Mathematics': true,
+            'Physics': true
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadSessions();
+            initTabSystem();
+            renderAll();
+            updateTimerControlsUI();
+        });
+
+        function switchTab(tabId) {
+            state.activeTab = tabId;
+            const tabs = ['dashboard', 'timer', 'logs'];
+            tabs.forEach(t => {
+                const el = document.getElementById(`tab-${t}`);
+                const navBtn = document.getElementById(`float-nav-${t}`);
+                if (el) {
+                    if (t === tabId) el.classList.remove('hidden');
+                    else el.classList.add('hidden');
+                }
+                if (navBtn) {
+                    if (t === tabId) {
+                        navBtn.className = "float-tab group relative flex flex-col items-center justify-center gap-0.5 px-4 py-1.5 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-lg shadow-emerald-500/30 transition-all duration-300 active:scale-95 opacity-100 scale-105 -translate-y-1 ring-2 ring-white/50";
+                    } else {
+                        navBtn.className = "float-tab group relative flex flex-col items-center justify-center gap-0.5 px-4 py-1.5 rounded-2xl bg-gradient-to-br from-zinc-800 to-zinc-900 text-zinc-400 shadow-lg transition-all duration-300 active:scale-95 opacity-50 grayscale scale-100";
+                    }
+                }
+            });
+            if (tabId === 'dashboard') {
+                if (state.dashboardSubTab === 'today') {
+                    renderTodayStats();
+                } else {
+                    renderWeekStats();
+                    renderStreaksWidget();
+                    renderDashboardCharts();
+                }
+            } else if (tabId === 'logs') {
+                renderSessionsLogs();
+            }
+        }
+
+        function switchDashboardSubTab(subTab) {
+            state.dashboardSubTab = subTab;
+            const todayBtn = document.getElementById('subtab-today-btn');
+            const weekBtn = document.getElementById('subtab-week-btn');
+            const todaySec = document.getElementById('dashboard-subtab-today');
+            const weekSec = document.getElementById('dashboard-subtab-week');
+
+            if (subTab === 'today') {
+                if (todayBtn) todayBtn.className = "flex-1 py-2 rounded-xl text-xs font-bold transition-all bg-emerald-600 text-white shadow";
+                if (weekBtn) weekBtn.className = "flex-1 py-2 rounded-xl text-xs font-bold transition-all text-zinc-400 hover:text-white";
+                if (todaySec) todaySec.classList.remove('hidden');
+                if (weekSec) weekSec.classList.add('hidden');
+                renderTodayStats();
+            } else {
+                if (todayBtn) todayBtn.className = "flex-1 py-2 rounded-xl text-xs font-bold transition-all text-zinc-400 hover:text-white";
+                if (weekBtn) weekBtn.className = "flex-1 py-2 rounded-xl text-xs font-bold transition-all bg-emerald-600 text-white shadow";
+                if (todaySec) todaySec.classList.add('hidden');
+                if (weekSec) weekSec.classList.remove('hidden');
+                renderWeekStats();
+                renderStreaksWidget();
+                renderDashboardCharts();
+            }
+        }
+
+        function changeTodayDate(offsetDays) {
+            try {
+                const parts = state.selectedTodayDate.split('-');
+                // Create Date using local timezone numbers to prevent UTC shift issues
+                const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                d.setDate(d.getDate() + offsetDays);
+                
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                state.selectedTodayDate = `${year}-${month}-${day}`;
+                renderTodayStats();
+            } catch(e) {}
+        }
+
+        function jumpToTodayDate() {
+            const todayObj = new Date();
+            const year = todayObj.getFullYear();
+            const month = String(todayObj.getMonth() + 1).padStart(2, '0');
+            const day = String(todayObj.getDate()).padStart(2, '0');
+            state.selectedTodayDate = `${year}-${month}-${day}`;
+            renderTodayStats();
+        }
+
+        function changeWeekOffset(direction) {
+            state.weekOffset += direction;
+            renderWeekStats();
+            renderStreaksWidget();
+            renderDashboardCharts();
+        }
+
+        function jumpToCurrentWeek() {
+            state.weekOffset = 0;
+            renderWeekStats();
+            renderStreaksWidget();
+            renderDashboardCharts();
+        }
+
+        function renderAll() {
+            renderTodayStats();
+            renderWeekStats();
+            renderStreaksWidget();
+            renderSessionsLogs();
+            if (state.activeTab === 'dashboard') {
+                if (state.dashboardSubTab === 'today') renderTodayStats();
+                else renderDashboardCharts();
+            }
+        }
+
+        function renderTodayStats() {
+            const selDate = state.selectedTodayDate;
+            const todayObjLocal = new Date();
+            const todayStr = `${todayObjLocal.getFullYear()}-${String(todayObjLocal.getMonth() + 1).padStart(2, '0')}-${String(todayObjLocal.getDate()).padStart(2, '0')}`;
+            
+            const parts = selDate.split('-');
+            const todayDateObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+            const isToday = selDate === todayStr;
+            const dateLabelText = (isToday ? 'Today, ' : '') + todayDateObj.toLocaleDateString('en-US', options);
+            
+            const labelEl = document.getElementById('today-date-label');
+            if (labelEl) labelEl.innerText = dateLabelText;
+
+            const jumpBtn = document.getElementById('today-jump-btn');
+            if (jumpBtn) {
+                if (isToday) jumpBtn.classList.add('hidden');
+                else jumpBtn.classList.remove('hidden');
+            }
+
+            let todayMins = 0;
+            let todaySessionsCount = 0;
+            const subMins = { 'Combined Mathematics': 0, 'Physics': 0, 'Chemistry': 0 };
+            const subCounts = { 'Combined Mathematics': 0, 'Physics': 0, 'Chemistry': 0 };
+
+            state.sessions.forEach(s => {
+                if (s.date === selDate) {
+                    const m = Number(s.minutes) || 0;
+                    todayMins += m;
+                    todaySessionsCount++;
+                    if (subMins[s.subject] !== undefined) {
+                        subMins[s.subject] += m;
+                        subCounts[s.subject]++;
+                    }
+                }
+            });
+
+            const timeH = Math.floor(todayMins / 60);
+            const timeM = todayMins % 60;
+            const timeEl = document.getElementById('dash-today-time');
+            if (timeEl) timeEl.innerText = `${timeH}h ${String(timeM).padStart(2, '0')}m`;
+            
+            const countEl = document.getElementById('dash-today-sessions-count');
+            if (countEl) countEl.innerText = todaySessionsCount;
+
+            const subjects = [
+                { name: 'Combined Mathematics', key: 'maths' },
+                { name: 'Physics', key: 'physics' },
+                { name: 'Chemistry', key: 'chem' }
+            ];
+
+            subjects.forEach(sub => {
+                const m = subMins[sub.name];
+                const c = subCounts[sub.name];
+                const h = Math.floor(m / 60);
+                const min = m % 60;
+                const pct = todayMins > 0 ? Math.round((m / todayMins) * 100) : 0;
+
+                const timeEl = document.getElementById(`today-${sub.key}-time`);
+                const sesEl = document.getElementById(`today-${sub.key}-sessions`);
+                const pctEl = document.getElementById(`today-${sub.key}-percent`);
+                const barEl = document.getElementById(`today-${sub.key}-bar`);
+
+                if (timeEl) timeEl.innerText = `${h}h ${String(min).padStart(2, '0')}m`;
+                if (sesEl) sesEl.innerText = `${c} session${c === 1 ? '' : 's'}`;
+                if (pctEl) pctEl.innerText = `${pct}%`;
+                if (barEl) barEl.style.width = `${pct}%`;
+            });
+
+            renderTodayDonutChart(subMins, todayMins);
+        }
+
+        function renderTodayDonutChart(subMins, totalMins) {
+            const donutCtx = document.getElementById('todayDonutChart');
+            if (!donutCtx) return;
+
+            if (todayDonutInstance) {
+                todayDonutInstance.destroy();
+            }
+
+            const mathMins = subMins['Combined Mathematics'] || 0;
+            const physMins = subMins['Physics'] || 0;
+            const chemMins = subMins['Chemistry'] || 0;
+
+            if (totalMins === 0) {
+                todayDonutInstance = new Chart(donutCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['No Data'],
+                        datasets: [{ data: [1], backgroundColor: ['#27272a'], borderWidth: 0 }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                        cutout: '75%'
+                    }
+                });
+                return;
+            }
+
+            todayDonutInstance = new Chart(donutCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Chemistry', 'Combined Maths', 'Physics'],
+                    datasets: [{
+                        data: [chemMins, mathMins, physMins],
+                        backgroundColor: ['#10b981', '#ef4444', '#3b82f6'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                color: '#ffffff',
+                                font: { size: 10, weight: 'bold' },
+                                boxWidth: 10,
+                                boxHeight: 10,
+                                usePointStyle: true,
+                                pointStyle: 'circle',
+                                generateLabels: (chart) => {
+                                    const data = chart.data;
+                                    if (data.labels.length && data.datasets.length) {
+                                        return data.labels.map((label, i) => ({
+                                            text: label,
+                                            fillStyle: data.datasets[0].backgroundColor[i],
+                                            strokeStyle: data.datasets[0].backgroundColor[i],
+                                            pointStyle: 'circle',
+                                            hidden: false,
+                                            index: i,
+                                            fontColor: '#ffffff'
+                                        }));
+                                    }
+                                    return [];
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const mins = context.raw || 0;
+                                    const h = Math.floor(mins / 60);
+                                    const m = mins % 60;
+                                    return ` ${context.label}: ${h}h ${String(m).padStart(2, '0')}m`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '72%'
+                }
+            });
+        }
+
+        function renderWeekStats() {
+            let totalWeekMins = 0;
+            let totalWeekSessions = 0;
+            const subjWeekly = { 'Combined Mathematics': 0, 'Physics': 0, 'Chemistry': 0 };
+
+            const today = new Date();
+            today.setDate(today.getDate() - (state.weekOffset * 7));
+
+            const endOfWeekDate = new Date(today);
+            const startOfWeekDate = new Date(today);
+            startOfWeekDate.setDate(startOfWeekDate.getDate() - 6);
+
+            const weekRangeLabelEl = document.getElementById('week-range-label');
+            const weekJumpBtn = document.getElementById('week-jump-btn');
+
+            if (weekRangeLabelEl) {
+                if (state.weekOffset === 0) {
+                    weekRangeLabelEl.innerText = 'This Week';
+                } else {
+                    const opts = { month: 'short', day: 'numeric' };
+                    weekRangeLabelEl.innerText = `${startOfWeekDate.toLocaleDateString('en-US', opts)} - ${endOfWeekDate.toLocaleDateString('en-US', opts)}`;
+                }
+            }
+
+            if (weekJumpBtn) {
+                if (state.weekOffset === 0) weekJumpBtn.classList.add('hidden');
+                else weekJumpBtn.classList.remove('hidden');
+            }
+
+            for (let i = 0; i < 7; i++) {
+                const d = new Date(today);
+                d.setDate(d.getDate() - i);
+                const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+                state.sessions.forEach(s => {
+                    if (s.date === dateStr) {
+                        const m = Number(s.minutes) || 0;
+                        totalWeekMins += m;
+                        totalWeekSessions++;
+                        if (subjWeekly[s.subject] !== undefined) {
+                            subjWeekly[s.subject] += m;
+                        }
+                    }
+                });
+            }
+
+            const weeklyTimeEl = document.getElementById('dash-weekly-time');
+            if (weeklyTimeEl) weeklyTimeEl.innerText = `${(totalWeekMins / 60).toFixed(1)} hrs`;
+
+            const totalSessionsEl = document.getElementById('dash-total-sessions');
+            if (totalSessionsEl) totalSessionsEl.innerText = totalWeekSessions;
+
+            let topSub = 'Combined Mathematics';
+            let maxMins = -1;
+            Object.keys(subjWeekly).forEach(sub => {
+                if (subjWeekly[sub] > maxMins) {
+                    maxMins = subjWeekly[sub];
+                    topSub = sub;
+                }
+            });
+
+            const topSubEl = document.getElementById('dash-top-subject');
+            const topSubTimeEl = document.getElementById('dash-top-subject-time');
+            if (topSubEl) {
+                const parts = topSub.split(' ');
+                if (parts.length > 1) {
+                    topSubEl.innerHTML = `<span class="block">${parts[0]}</span><span class="block">${parts.slice(1).join(' ')}</span>`;
+                } else {
+                    topSubEl.innerHTML = `<span class="block">${topSub}</span>`;
+                }
+            }
+            if (topSubTimeEl) topSubTimeEl.innerText = `${(maxMins / 60).toFixed(1)} hrs total`;
+        }
+
+        function renderStreaksWidget() {
+            const gridEl = document.getElementById('streaks-week-grid');
+            if (!gridEl) return;
+            gridEl.innerHTML = '';
+
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const today = new Date();
+            today.setDate(today.getDate() - (state.weekOffset * 7));
+            const todayObjLocal = new Date();
+            const todayStr = `${todayObjLocal.getFullYear()}-${String(todayObjLocal.getMonth() + 1).padStart(2, '0')}-${String(todayObjLocal.getDate()).padStart(2, '0')}`;
+
+            const daysData = [];
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date(today);
+                d.setDate(d.getDate() - i);
+                const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                let dayMins = 0;
+                state.sessions.forEach(s => {
+                    if (s.date === dateStr) dayMins += Number(s.minutes) || 0;
+                });
+                
+                const isToday = (dateStr === todayStr && state.weekOffset === 0);
+                const hasWorked = dayMins > 0;
+
+                let timeDisplay = '0h';
+                if (dayMins > 0) {
+                    const h = Math.floor(dayMins / 60);
+                    const m = dayMins % 60;
+                    if (h > 0 && m > 0) {
+                        timeDisplay = `${h}.${Math.round((m/60)*10)}h`;
+                    } else if (h > 0) {
+                        timeDisplay = `${h}h`;
+                    } else {
+                        timeDisplay = `${m}m`;
+                    }
+                }
+
+                daysData.push({
+                    name: dayNames[d.getDay()],
+                    mins: dayMins,
+                    hasWorked: hasWorked,
+                    isToday: isToday,
+                    timeDisplay: timeDisplay
+                });
+            }
+
+            daysData.forEach(day => {
+                const cell = document.createElement('div');
+                cell.className = "flex flex-col items-center justify-center gap-1.5 flex-1";
+                
+                let circleStyle = "";
+
+                if (day.hasWorked) {
+                    circleStyle = "bg-emerald-500/20 border-emerald-500 text-emerald-300";
+                } else {
+                    circleStyle = "bg-red-500/15 border-red-500/60 text-red-400";
+                }
+
+                if (day.isToday && !day.hasWorked) {
+                    circleStyle = "bg-zinc-800 border-zinc-700 text-zinc-400";
+                }
+
+                cell.innerHTML = `
+                    <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">${day.name}</span>
+                    <div class="w-full aspect-square max-w-[44px] mx-auto rounded-full flex items-center justify-center border transition-all shadow-md ${circleStyle} ${day.isToday ? 'ring-2 ring-emerald-500/40' : ''}">
+                        <span class="text-[10px] sm:text-[11px] font-extrabold tracking-tighter">${day.timeDisplay}</span>
+                    </div>
+                `;
+                gridEl.appendChild(cell);
+            });
+        }
+
+        function renderDashboardCharts() {
+            if (state.activeTab !== 'dashboard') return;
+
+            const barCtx = document.getElementById('weeklyStackedBarChart');
+            if (barCtx) {
+                if (weeklyChartInstance) {
+                    weeklyChartInstance.destroy();
+                }
+
+                const dayLabels = [];
+                const mathData = [];
+                const physData = [];
+                const chemData = [];
+
+                const today = new Date();
+                today.setDate(today.getDate() - (state.weekOffset * 7));
+
+                for (let i = 6; i >= 0; i--) {
+                    const d = new Date(today);
+                    d.setDate(d.getDate() - i);
+                    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                    const opts = { weekday: 'short', month: 'numeric', day: 'numeric' };
+                    dayLabels.push(d.toLocaleDateString('en-US', opts));
+
+                    let mSum = 0, pSum = 0, cSum = 0;
+                    state.sessions.forEach(s => {
+                        if (s.date === dateStr) {
+                            const m = Number(s.minutes) || 0;
+                            if (s.subject === 'Combined Mathematics') mSum += m;
+                            if (s.subject === 'Physics') pSum += m;
+                            if (s.subject === 'Chemistry') cSum += m;
+                        }
+                    });
+
+                    if (!showCoursesEnabled) {
+                        const totalSum = (activeSubjectFilters['Combined Mathematics'] ? mSum : 0) +
+                                         (activeSubjectFilters['Physics'] ? pSum : 0) +
+                                         (activeSubjectFilters['Chemistry'] ? cSum : 0);
+                        mathData.push(Number((totalSum / 60).toFixed(1)));
+                        physData.push(0);
+                        chemData.push(0);
+                    } else {
+                        mathData.push(activeSubjectFilters['Combined Mathematics'] ? Number((mSum / 60).toFixed(1)) : 0);
+                        physData.push(activeSubjectFilters['Physics'] ? Number((pSum / 60).toFixed(1)) : 0);
+                        chemData.push(activeSubjectFilters['Chemistry'] ? Number((cSum / 60).toFixed(1)) : 0);
+                    }
+                }
+
+                weeklyChartInstance = new Chart(barCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: dayLabels,
+                        datasets: showCoursesEnabled ? [
+                            { label: 'Chemistry', data: chemData, backgroundColor: '#10b981', borderRadius: 4 },
+                            { label: 'Combined Maths', data: mathData, backgroundColor: '#ef4444', borderRadius: 4 },
+                            { label: 'Physics', data: physData, backgroundColor: '#3b82f6', borderRadius: 4 }
+                        ] : [
+                            { label: 'Total Hours', data: mathData, backgroundColor: '#10b981', borderRadius: 4 }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { stacked: true, grid: { display: false }, ticks: { color: '#a1a1aa', font: { size: 10 } } },
+                            y: { stacked: true, grid: { color: 'rgba(39, 39, 42, 0.4)' }, ticks: { color: '#a1a1aa', font: { size: 10 } } }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+
+            const radarCtx = document.getElementById('weeklyRadarChart');
+            if (radarCtx) {
+                if (radarChartInstance) {
+                    radarChartInstance.destroy();
+                }
+
+                const dayNamesOrdered = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                const dayHours = [0, 0, 0, 0, 0, 0, 0];
+                let totalWeeklyMins = 0;
+
+                const today = new Date();
+                today.setDate(today.getDate() - (state.weekOffset * 7));
+
+                for (let i = 6; i >= 0; i--) {
+                    const d = new Date(today);
+                    d.setDate(d.getDate() - i);
+                    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                    
+                    let dayTotalMins = 0;
+                    state.sessions.forEach(s => {
+                        if (s.date === dateStr) {
+                            dayTotalMins += Number(s.minutes) || 0;
+                        }
+                    });
+                    totalWeeklyMins += dayTotalMins;
+
+                    let jsDay = d.getDay();
+                    let index = jsDay === 0 ? 6 : jsDay - 1;
+                    dayHours[index] = Number((dayTotalMins / 60).toFixed(1));
+                }
+
+                radarChartInstance = new Chart(radarCtx, {
+                    type: 'radar',
+                    data: {
+                        labels: dayNamesOrdered,
+                        datasets: [{
+                            label: 'Daily Hours',
+                            data: dayHours,
+                            backgroundColor: 'rgba(59, 130, 246, 0.25)',
+                            borderColor: '#3b82f6',
+                            pointBackgroundColor: '#3b82f6',
+                            pointBorderColor: '#ffffff',
+                            borderWidth: 2,
+                            pointRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                grid: { color: 'rgba(39, 39, 42, 0.6)' },
+                                angleLines: { color: 'rgba(39, 39, 42, 0.6)' },
+                                ticks: { display: false, maxTicksLimit: 5 },
+                                pointLabels: { color: '#d4d4d8', font: { size: 11, weight: 'bold' } }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.raw + 'h';
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    plugins: [{
+                        id: 'centerTotalHoursPlugin',
+                        afterDraw: (chart) => {
+                            const width = chart.width;
+                            const height = chart.height;
+                            const ctx = chart.ctx;
+                            ctx.save();
+                            const totalHrs = (totalWeeklyMins / 60).toFixed(0);
+                            
+                            const centerX = width / 2;
+                            const centerY = height / 2 + 10;
+                            
+                            ctx.font = 'bold 10px Inter, sans-serif';
+                            ctx.fillStyle = '#a1a1aa';
+                            ctx.textAlign = 'center';
+                            ctx.fillText('TOTAL', centerX, centerY - 12);
+
+                            ctx.font = 'black 22px Inter, sans-serif';
+                            ctx.fillStyle = '#ffffff';
+                            ctx.textAlign = 'center';
+                            ctx.fillText(totalHrs + 'h', centerX, centerY + 12);
+                            ctx.restore();
+                        }
+                    }]
+                });
+            }
+        }
+
+        function toggleShowCourses() {
+            showCoursesEnabled = !showCoursesEnabled;
+            const toggleBtn = document.getElementById('show-courses-toggle');
+            const knob = document.getElementById('show-courses-knob');
+            if (toggleBtn && knob) {
+                if (showCoursesEnabled) {
+                    toggleBtn.className = "w-7 h-4 bg-emerald-600 rounded-full transition relative p-0.5 shadow-inner";
+                    knob.className = "w-3 h-3 bg-white rounded-full transition-transform translate-x-3 shadow";
+                } else {
+                    toggleBtn.className = "w-7 h-4 bg-zinc-700 rounded-full transition relative p-0.5 shadow-inner";
+                    knob.className = "w-3 h-3 bg-white rounded-full transition-transform translate-x-0 shadow";
+                }
+            }
+            renderDashboardCharts();
+        }
+
+        function toggleSubjectFilter(subjName) {
+            activeSubjectFilters[subjName] = !activeSubjectFilters[subjName];
+            const btn = document.getElementById(`legend-btn-${subjName}`);
+            if (btn) {
+                if (activeSubjectFilters[subjName]) {
+                    btn.classList.remove('opacity-40');
+                } else {
+                    btn.classList.add('opacity-40');
+                }
+            }
+            renderDashboardCharts();
+        }
+
+        function setHistoryFilter(subj) {
+            state.historySubjectFilter = subj;
+            
+            const btnAll = document.getElementById('filter-btn-all');
+            const btnMaths = document.getElementById('filter-btn-maths');
+            const btnPhys = document.getElementById('filter-btn-physics');
+            const btnChem = document.getElementById('filter-btn-chem');
+
+            [btnAll, btnMaths, btnPhys, btnChem].forEach(b => {
+                if (b) b.className = "px-3 py-1.5 rounded-xl bg-black border border-zinc-800 text-zinc-400 hover:text-white transition flex-shrink-0";
+            });
+
+            if (subj === 'all' && btnAll) btnAll.className = "px-3 py-1.5 rounded-xl bg-emerald-600 text-white transition flex-shrink-0 shadow-sm";
+            if (subj === 'Combined Mathematics' && btnMaths) btnMaths.className = "px-3 py-1.5 rounded-xl bg-red-600 text-white transition flex-shrink-0 shadow-sm";
+            if (subj === 'Physics' && btnPhys) btnPhys.className = "px-3 py-1.5 rounded-xl bg-blue-600 text-white transition flex-shrink-0 shadow-sm";
+            if (subj === 'Chemistry' && btnChem) btnChem.className = "px-3 py-1.5 rounded-xl bg-emerald-600 text-white transition flex-shrink-0 shadow-sm";
+
+            renderSessionsLogs();
+        }
+
+        function renderSessionsLogs() {
+            const container = document.getElementById('sessions-groups-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const searchInput = document.getElementById('history-search-input');
+            const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+            let filteredSessions = state.sessions.filter(s => {
+                const matchesSubject = (state.historySubjectFilter === 'all' || s.subject === state.historySubjectFilter);
+                const matchesQuery = !query || s.topic.toLowerCase().includes(query) || s.subject.toLowerCase().includes(query);
+                return matchesSubject && matchesQuery;
+            });
+
+            // Calculate overall stats for filtered logs
+            let totalFilteredMins = 0;
+            filteredSessions.forEach(s => totalFilteredMins += Number(s.minutes) || 0);
+            
+            const totalTimeEl = document.getElementById('history-total-time');
+            const totalCountEl = document.getElementById('history-total-count');
+            if (totalTimeEl) {
+                const h = Math.floor(totalFilteredMins / 60);
+                const m = totalFilteredMins % 60;
+                totalTimeEl.innerText = `${h}h ${String(m).padStart(2, '0')}m`;
+            }
+            if (totalCountEl) totalCountEl.innerText = filteredSessions.length;
+
+            if (filteredSessions.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 text-center space-y-2">
+                        <i class="fa-solid fa-folder-open text-zinc-600 text-2xl"></i>
+                        <p class="text-xs font-bold text-zinc-300">No matching study sessions found</p>
+                        <p class="text-[10px] text-zinc-500">Try adjusting your search query or subject filter</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const grouped = {};
+            filteredSessions.forEach(s => {
+                if (!grouped[s.date]) grouped[s.date] = [];
+                grouped[s.date].push(s);
+            });
+
+            const sortedDates = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
+
+            sortedDates.forEach(dateStr => {
+                const parts = dateStr.split('-');
+                const dateObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+                const dateLabel = dateObj.toLocaleDateString('en-US', options);
+
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'space-y-2';
+                
+                let sessionsHtml = '';
+                grouped[dateStr].forEach(sess => {
+                    const color = SUBJECT_COLORS[sess.subject] || '#10b981';
+                    const h = Math.floor(sess.minutes / 60);
+                    const m = sess.minutes % 60;
+                    const durationStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
+
+                    sessionsHtml += `
+                        <div class="bg-zinc-900/90 border border-zinc-800 hover:border-zinc-700/80 rounded-2xl p-3.5 shadow-md flex items-center justify-between gap-3 transition">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-2.5 h-10 rounded-full flex-shrink-0" style="background-color: ${color};"></div>
+                                <div class="min-w-0">
+                                    <h4 class="text-xs font-extrabold text-white truncate">${sess.topic || sess.subject}</h4>
+                                    <div class="flex items-center gap-2 mt-0.5 text-[10px] text-zinc-400">
+                                        <span class="font-bold text-zinc-300 truncate">${sess.subject}</span>
+                                        <span>•</span>
+                                        <span class="text-zinc-500">${sess.timeRange || durationStr}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 flex-shrink-0">
+                                <span class="text-xs font-black text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-xl border border-emerald-500/20">${durationStr}</span>
+                                <button onclick="deleteSession('${sess.id}')" class="w-7 h-7 rounded-xl bg-zinc-800 hover:bg-red-500/20 hover:text-red-400 text-zinc-400 transition flex items-center justify-center text-xs" title="Delete Session">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                groupDiv.innerHTML = `
+                    <div class="text-[11px] font-extrabold text-zinc-400 uppercase tracking-wider px-1 flex items-center justify-between">
+                        <span>${dateLabel}</span>
+                        <span class="text-[10px] font-semibold text-zinc-500">${grouped[dateStr].length} session${grouped[dateStr].length === 1 ? '' : 's'}</span>
+                    </div>
+                    <div class="space-y-2">${sessionsHtml}</div>
+                `;
+                container.appendChild(groupDiv);
+            });
+        }
+
+        function setTimerMode(mode) {
+            timerMode = mode;
+            const pBtn = document.getElementById('mode-pomodoro-btn');
+            const sBtn = document.getElementById('mode-stopwatch-btn');
+            if (mode === 'pomodoro') {
+                if (pBtn) pBtn.className = "flex-1 py-2 rounded-xl text-xs font-bold transition-all bg-zinc-800 text-white shadow";
+                if (sBtn) sBtn.className = "flex-1 py-2 rounded-xl text-xs font-bold transition-all text-zinc-400 hover:text-white";
+                timerSecondsLeft = 25 * 60;
+            } else {
+                if (pBtn) pBtn.className = "flex-1 py-2 rounded-xl text-xs font-bold transition-all text-zinc-400 hover:text-white";
+                if (sBtn) sBtn.className = "flex-1 py-2 rounded-xl text-xs font-bold transition-all bg-zinc-800 text-white shadow";
+                timerSecondsLeft = 0;
+            }
+            updateTimerDisplay();
+        }
+
+        function selectTimerSubject(subName) {
+            selectedTimerSubject = subName;
+            const mathsBtn = document.getElementById('subj-btn-maths');
+            const physBtn = document.getElementById('subj-btn-physics');
+            const chemBtn = document.getElementById('subj-btn-chemistry');
+
+            [mathsBtn, physBtn, chemBtn].forEach(b => {
+                if (b) b.className = "timer-subj-btn py-2.5 px-3 rounded-xl border border-zinc-800 bg-black text-zinc-400 font-bold text-xs transition flex items-center justify-center gap-2 hover:border-zinc-600";
+            });
+
+            if (subName === 'Combined Mathematics' && mathsBtn) {
+                mathsBtn.className = "timer-subj-btn py-2.5 px-3 rounded-xl border border-red-500/50 bg-red-500/20 text-red-300 font-extrabold text-xs transition flex items-center justify-center gap-2";
+            } else if (subName === 'Physics' && physBtn) {
+                physBtn.className = "timer-subj-btn py-2.5 px-3 rounded-xl border border-blue-500/50 bg-blue-500/20 text-blue-300 font-extrabold text-xs transition flex items-center justify-center gap-2";
+            } else if (subName === 'Chemistry' && chemBtn) {
+                chemBtn.className = "timer-subj-btn py-2.5 px-3 rounded-xl border border-emerald-500/50 bg-emerald-500/20 text-emerald-300 font-extrabold text-xs transition flex items-center justify-center gap-2";
+            }
+        }
+
+        function toggleTimer() {
+            const statusLabel = document.getElementById('timer-status-label');
+
+            if (!isTimerRunning) {
+                isTimerRunning = true;
+                isTimerPaused = false;
+                updateTimerControlsUI();
+                if (statusLabel) statusLabel.innerText = "Focus Session in Progress";
+
+                timerInterval = setInterval(() => {
+                    if (timerMode === 'pomodoro') {
+                        if (timerSecondsLeft > 0) {
+                            timerSecondsLeft--;
+                            timerTotalElapsed++;
+                        } else {
+                            clearInterval(timerInterval);
+                            finishTimerSession();
+                        }
+                    } else {
+                        timerSecondsLeft++;
+                        timerTotalElapsed++;
+                    }
+                    updateTimerDisplay();
+                }, 1000);
+            } else {
+                isTimerRunning = false;
+                isTimerPaused = true;
+                clearInterval(timerInterval);
+                updateTimerControlsUI();
+                if (statusLabel) statusLabel.innerText = "Session Paused";
+            }
+        }
+
+        function resumeTimer() {
+            toggleTimer();
+        }
+
+        function stopTimerAndSave() {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            isTimerPaused = false;
+            
+            const totalMins = Math.max(1, Math.round(timerTotalElapsed / 60));
+            const topicInput = document.getElementById('timer-topic-input');
+            const topic = topicInput && topicInput.value.trim() ? topicInput.value.trim() : `${selectedTimerSubject} Focus Session`;
+
+            const todayObjLocal = new Date();
+            const todayStr = `${todayObjLocal.getFullYear()}-${String(todayObjLocal.getMonth() + 1).padStart(2, '0')}-${String(todayObjLocal.getDate()).padStart(2, '0')}`;
+
+            const newSess = {
+                id: Date.now().toString(),
+                subject: selectedTimerSubject,
+                topic: topic,
+                minutes: totalMins,
+                timeRange: 'Timer Session',
+                date: todayStr
+            };
+
+            state.sessions.unshift(newSess);
+            saveSessions();
+            renderAll();
+            resetTimer();
+            switchTab('dashboard');
+        }
+
+        function updateTimerControlsUI() {
+            const container = document.getElementById('timer-controls-area');
+            if (!container) return;
+
+            if (!isTimerRunning && !isTimerPaused) {
+                container.innerHTML = `
+                    <button id="timer-main-btn" onclick="toggleTimer()" class="py-3 px-8 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm rounded-2xl shadow-xl shadow-emerald-500/20 transition flex items-center gap-2">
+                        <i class="fa-solid fa-play" id="timer-main-icon"></i> <span id="timer-main-text">Start Focus</span>
+                    </button>
+                    <button onclick="resetTimer()" class="py-3 px-5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-sm rounded-2xl transition" title="Reset Timer">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                `;
+            } else if (isTimerRunning) {
+                container.innerHTML = `
+                    <button id="timer-main-btn" onclick="toggleTimer()" class="py-3 px-6 bg-amber-600 hover:bg-amber-500 text-white font-extrabold text-sm rounded-2xl shadow-xl transition flex items-center gap-2">
+                        <i class="fa-solid fa-pause"></i> <span>Pause Focus</span>
+                    </button>
+                    <button onclick="resetTimer()" class="py-3 px-5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-sm rounded-2xl transition" title="Reset Timer">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                `;
+            } else if (isTimerPaused) {
+                container.innerHTML = `
+                    <button onclick="resumeTimer()" class="py-3 px-5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-2xl shadow-xl transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-play"></i> <span>Resume</span>
+                    </button>
+                    <button onclick="stopTimerAndSave()" class="py-3 px-5 bg-red-600 hover:bg-red-500 text-white font-extrabold text-xs rounded-2xl shadow-xl transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-square"></i> <span>Stop & Save</span>
+                    </button>
+                    <button onclick="resetTimer()" class="py-3 px-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs rounded-2xl transition" title="Reset Timer">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                `;
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            isTimerPaused = false;
+            timerTotalElapsed = 0;
+            if (timerMode === 'pomodoro') timerSecondsLeft = 25 * 60;
+            else timerSecondsLeft = 0;
+
+            const statusLabel = document.getElementById('timer-status-label');
+            if (statusLabel) statusLabel.innerText = "Ready to Focus";
+            updateTimerDisplay();
+            updateTimerControlsUI();
+        }
+
+        function finishTimerSession() {
+            stopTimerAndSave();
+        }
+
+        function updateTimerDisplay() {
+            const displayEl = document.getElementById('timer-display');
+            if (!displayEl) return;
+            const m = Math.floor(timerSecondsLeft / 60);
+            const s = timerSecondsLeft % 60;
+            displayEl.innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        function openManualLogModal() {
+            const modal = document.getElementById('manual-modal');
+            const dateInput = document.getElementById('manual-date');
+            if (dateInput) {
+                const todayObjLocal = new Date();
+                dateInput.value = `${todayObjLocal.getFullYear()}-${String(todayObjLocal.getMonth() + 1).padStart(2, '0')}-${String(todayObjLocal.getDate()).padStart(2, '0')}`;
+            }
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeManualLogModal() {
+            const modal = document.getElementById('manual-modal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function handleManualAdd(e) {
+            e.preventDefault();
+            const subject = document.getElementById('manual-subject').value;
+            const topic = document.getElementById('manual-topic').value;
+            const minutes = Number(document.getElementById('manual-minutes').value) || 30;
+            const date = document.getElementById('manual-date').value;
+
+            const newSess = {
+                id: Date.now().toString(),
+                subject,
+                topic,
+                minutes,
+                timeRange: 'Manual Log',
+                date
+            };
+
+            state.sessions.unshift(newSess);
+            saveSessions();
+            renderAll();
+            closeManualLogModal();
+            e.target.reset();
+        }
+
+        function deleteSession(id) {
+            state.sessions = state.sessions.filter(s => s.id !== id);
+            saveSessions();
+            renderAll();
+        }
+
+        function initTabSystem() {
+            // tab system initialized
+        }
+    </script>
+</body>
+</html>
